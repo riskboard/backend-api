@@ -15,7 +15,6 @@ import os
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.2/howto/deployment/checklist/
 
@@ -26,7 +25,6 @@ SECRET_KEY = 'c+_ak7f7shwmou-7s$378joeu7&#&inq9sa78a(m5$hoe$%9_#'
 DEBUG = True
 
 ALLOWED_HOSTS = []
-
 
 # Application definition
 EXTERNAL_APPS = [
@@ -40,7 +38,7 @@ EXTERNAL_APPS = [
 ]
 
 DEVELOPED_APPS = [
-    'datacenter',
+    'apps.datacenter',
 ]
 
 INSTALLED_APPS = EXTERNAL_APPS + DEVELOPED_APPS
@@ -81,8 +79,8 @@ WSGI_APPLICATION = 'api.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django_mongodb_engine',
-        'NAME': 'mongodb',
+        'ENGINE': 'djongo',
+        'NAME': 'db',
     }
 }
 
