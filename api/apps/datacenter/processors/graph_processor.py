@@ -18,7 +18,7 @@ from ..utils.utils import metaphone_name
 TYPE_ORGANIZATION = 'Organization'
 TYPE_PERSON = 'Person'
 
-def extract_and_filter_data(data, query, date):
+def extract_and_filter_data(data, date, query):
   '''
   Extracts the url, people, organizations, and location from
   one row in the GKG dataframe
@@ -30,22 +30,21 @@ def extract_and_filter_data(data, query, date):
   if not len(actor_names):
     return False
 
-  # locations = extractLocations(data)
-
-  gkg_themes = extract_gkg_themes(data)
-
-  if query and not query.filter_article(actor_names, gkg_themes): return False
-
-  # locationIDs = [loc.storeDB(db) for loc in locations]
-
-  people = [find_or_create_actor(actor_type=TYPE_PERSON, actor_name=name) for name in people_names]
-
-  orgs = [find_or_create_actor(actor_type=TYPE_ORGANIZATION, actor_name=name) for name in org_names]
-
-  actors = people+orgs
+  gkg_theme_strs = extract_data_list('Themes', data)
+  locations = extract_locations(data)
 
   url = str(data['DocumentIdentifier'])
-  language, kwds = get_article_params(url)
+  language, kwds, kwd_strings = get_article_params(url)
+
+  if query and not query.filter_article(article_themes=gkg_theme_strs, 
+  article_locations=locations, article_kwds=kwd_strings, article_language=language):
+    return False
+
+  # Object Creation
+  gkg_themes = extract_gkg_themes(gkg_theme_strs)
+  people = [find_or_create_actor(actor_type=TYPE_PERSON, actor_name=name) for name in people_names]
+  orgs = [find_or_create_actor(actor_type=TYPE_ORGANIZATION, actor_name=name) for name in org_names]
+  actors = people+orgs
 
   article = Article.objects.create(url=url, date=date, language=language)
 
@@ -55,8 +54,7 @@ def extract_and_filter_data(data, query, date):
 
   return article, actors
 
-def extract_gkg_themes(data):
-  theme_strs = extract_data_list('Themes', data)
+def extract_gkg_themes(theme_strs):
   themes = []
   for theme_str in theme_strs:
     query = GKGTheme.objects.filter(theme=theme_str)
@@ -64,6 +62,26 @@ def extract_gkg_themes(data):
       themes.append(GKGTheme.objects.create(theme=theme_str))
     else: themes.append(query[0])
   return themes
+
+def extract_locations(data):
+  '''
+  Exracts locations from a row in data
+  '''
+  locationStr = str(data['Locations'])
+  if locationStr == 'nan':
+    return None
+  else:
+    location_infos = [location.split('#') for location in locationStr.split(';')]
+    locations = [format_loc_info(loc) for loc in location_infos]
+  return locations
+
+def format_loc_info(loc):
+  '''
+  Converts a location in GDelt to a GDeltLocation class
+  '''
+  loc_type, name, latitude, longitude = loc[0], loc[1], float(loc[4]), float(loc[5])
+  # return GDeltLocation(type=loc_type, name=name, latitude=latitude, longitude=longitude)
+  return name
 
 def find_or_create_actor(actor_type, actor_name):
   # find an actor with the existing name
@@ -100,7 +118,7 @@ def get_article_params(url):
       kwds.append(Keyword.objects.create(keyword=kwd_str))
     else: kwds.append(query[0])
 
-  return language, kwds
+  return language, kwds, kwd_strings
 
 def extractText(url):
   try:

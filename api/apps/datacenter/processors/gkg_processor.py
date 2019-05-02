@@ -12,7 +12,7 @@ class GKGProcessor():
   TODO: Interface with MongoDB
   '''
 
-  def __init__(self, start_date, end_date, query=None):
+  def __init__(self, query=None):
     '''
     Initializes a new DataCenter populated with data
     from the specified start date (inclusive) to the end date (exclusive)
@@ -37,11 +37,11 @@ class GKGProcessor():
     # initialize the headers of the dataframe
     self.headers = get_schema_headers()
 
-    # initialize regions
+    # initialize query
     self.query = query
 
     # get dates to initialize the database
-    init_date_strings = get_date_range_strings(start_date, end_date)
+    init_date_strings = get_date_range_strings(query.start_date, query.end_date)
     [self.update_database(date_string) for date_string in init_date_strings]
 
     print('DataCenter Initialized')
@@ -91,7 +91,7 @@ class GKGProcessor():
 
   def update_row(self, data, date):
     try:
-      data = extract_and_filter_data(data, self.query, date)
+      data = extract_and_filter_data(data, date, self.query)
 
       (article, actors) = data
 
