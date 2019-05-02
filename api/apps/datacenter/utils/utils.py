@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from metaphone import doublemetaphone
 import numpy as np
 import pandas as pd
 
@@ -6,10 +7,13 @@ def get_date_time_obj(date):
   '''
   Creates a datetime object corresponding to a specified date string
   Dates should be formatted as follows:
-  'YYYY MM DD'
+  'YYYY-MM-DD'
   e.g. '2019 02 19'
   '''
-  return datetime.strptime(date, '%Y %m %d')
+  return datetime.strptime(date, '%Y-%m-%d')
+
+def get_date_from_string(date_string):
+  return f'{date_string[:4]}-{date_string[4:6]}-{date_string[6:8]}'
 
 def get_date_string_list(date_obj, interval=15):
   '''
@@ -70,3 +74,10 @@ def format_actors(actors):
   '''
   if not actors: return None
   return [actor.lower() for actor in actors]
+
+def metaphone_name(name):
+  '''
+  returns the double metaphone abbreviation of a name
+  '''
+  metaphone_name = doublemetaphone(name)
+  return (metaphone_name[0] + metaphone_name[1])

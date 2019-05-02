@@ -1,6 +1,6 @@
 import pandas as pd
 
-from ..utils.utils import get_schema_headers, get_date_range_strings, get_date_url
+from ..utils.utils import get_schema_headers, get_date_range_strings, get_date_url, get_date_from_string
 from .graph_processor import extract_and_filter_data
 
 class GKGProcessor():
@@ -57,6 +57,7 @@ class GKGProcessor():
     try:
       # get data url
       url = get_date_url(date_string)
+
       # read in data file
       df = pd.read_csv(url, compression='zip', encoding='latin1', header=None, sep='\t')
       df.columns = self.headers
@@ -71,13 +72,14 @@ class GKGProcessor():
     print(f'* Processing {date_string} Information...')
     success, df = self.get_data_frame(date_string)
     if not success: return False
+    date = get_date_from_string(date_string)
 
     total_count = len(df)
     print(f'** {total_count} Rows')
     relevant_count = 0
 
     for ix, data in df.iterrows():
-      if self.update_row(data): relevant_count += 1
+      if self.update_row(data, date): relevant_count += 1
 
     self.total_data_count += total_count
     self.relevant_data_count += relevant_count
@@ -87,9 +89,9 @@ class GKGProcessor():
     print(f'** Relevant Data: {relevant_count/total_count:.0%}\n\n')
     return True
 
-  def update_row(self, data):
+  def update_row(self, data, date):
     try:
-      data = extract_and_filter_data(data, self.query)
+      data = extract_and_filter_data(data, self.query, date)
 
       (article, actors) = data
 
